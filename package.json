@@ -63,6 +63,7 @@
   "resolutions": {
     "nan": "2.18.0"
   },
+  "private": true,
   "overrides": {
     "usocket": {
       "node-gyp": "10.0.1",
