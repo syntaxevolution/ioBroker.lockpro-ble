@@ -63,9 +63,11 @@
   "resolutions": {
     "nan": "2.18.0"
   },
-    "overrides": {
-    "usocket>node-gyp": "10.0.1",
-    "usocket>nan": "2.18.0"
+  "overrides": {
+    "usocket": {
+      "node-gyp": "10.0.1",
+      "nan": "2.18.0"
+    }
   },
   "main": "build/main.js",
   "files": [
