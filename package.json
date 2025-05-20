@@ -2,26 +2,39 @@
   "name": "iobroker.switchbot-ble",
   "version": "0.1.0",
   "description": "ioBroker adapter for SwitchBot BLE devices using node-switchbot",
-  "main": "build/main.js",
+  "main": "main.js",
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "npm run build",
-    "lint": "eslint src --ext .ts",
-    "preinstall": "npx npm-force-resolutions"
+    "lint": "eslint . --ext .js",
+    "prepare": "npm run postinstall",
+    "postinstall": "node patch-usocket.js"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.2.3",
     "node-switchbot": "^3.5.0"
   },
   "devDependencies": {
-    "typescript": "^4.9.5",
+    "eslint": "^8.0.0"
+  },
+  "scripts": {
+    "preinstall": "npm install usocket@0.8.8 --no-save",
+    "lint": "eslint . --ext .js"
+  }
+  "devDependencies": {
+    "eslint": "^8.0.0",
+    "npm-force-resolutions": "^0.0.8"
+  },
+  "resolutions": {
+    "usocket": "0.8.8"
+  },
+  "scripts": {
+    "preinstall": "npx npm-force-resolutions",
+    "lint": "eslint . --ext .js"
+  },
+  "devDependencies": {
     "eslint": "^8.0.0"
   },
   "overrides": {
     "usocket": "0.8.8",
     "node-gyp": "^10.3.1"
-  },
-  "keywords": ["iobroker", "switchbot", "ble"],
-  "author": "Your Name",
-  "license": "MIT"
+  }
 }
