@@ -1,160 +1,129 @@
-/*
- * Created with @iobroker/create-adapter v2.6.5
- */
-
-// The adapter-core module gives you access to the core ioBroker functions
-// you need to create an adapter
 import * as utils from "@iobroker/adapter-core";
+import Switchbot = require("node-switchbot");
 
-// Load your modules here, e.g.:
-// import * as fs from "fs";
+/**
+ * ioBroker adapter class for SwitchBot Lock Pro over BLE (no cloud).
+ * `node-switchbot` exports a factory *function* (not a class), so we call it
+ * directly and keep the typings loose (`any`).
+ */
+class LockProBle extends utils.Adapter {
+    private sb: any;          // SwitchBot BLE transport
+    private lock?: any;       // WoSmartLock instance
+    private pollTimer?: NodeJS.Timeout;
 
-class LockproBle extends utils.Adapter {
+    constructor(options: Partial<utils.AdapterOptions> = {}) {
+        super({ ...options, name: "lockpro-ble" });
 
-    public constructor(options: Partial<utils.AdapterOptions> = {}) {
-        super({
-            ...options,
-            name: "lockpro-ble",
-        });
-        this.on("ready", this.onReady.bind(this));
-        this.on("stateChange", this.onStateChange.bind(this));
-        // this.on("objectChange", this.onObjectChange.bind(this));
-        // this.on("message", this.onMessage.bind(this));
+        // ioBroker typings miss the generic EventEmitter overloads → cast to any
+        (this as any).on("ready", this.onReady.bind(this));
+        (this as any).on("stateChange", this.onStateChange.bind(this));
         this.on("unload", this.onUnload.bind(this));
+
+        // create BLE stack – respect HCI selection from config
+        this.sb = Switchbot((this.config as any).bleHci || undefined);
     }
 
-    /**
-     * Is called when databases are connected and adapter received configuration.
-     */
+    /** Called once all adapter settings are present. */
     private async onReady(): Promise<void> {
-        // Initialize your adapter here
+        const cfg = this.config as any;
+        if (!cfg.lockMac) {
+            this.log.error("No MAC address configured – aborting.");
+            return;
+        }
 
-        // Reset the connection indicator during startup
-        this.setState("info.connection", false, true);
+        this.log.info(`Scanning for Lock Pro (${cfg.lockMac}) …`);
+        await this.sb.startScan();
+        try {
+            this.lock = await this.sb.waitFirst(
+                (d: any) => d.model === "p" && d.address.toLowerCase() === cfg.lockMac.toLowerCase(),
+                30_000,
+            );
+        } finally {
+            await this.sb.stopScan();
+        }
 
-        // The adapters config (in the instance object everything under the attribute "native") is accessible via
-        // this.config:
-        this.log.info("config bleHci: " + this.config.bleHci);
-        this.log.info("config lockMac: " + this.config.lockMac);
-        this.log.info("config keyId: " + this.config.keyId);
-        this.log.info("config encKey: " + this.config.encKey);
-        this.log.info("config poll: " + this.config.poll);
+        if (!this.lock) throw new Error("Lock Pro not found – check MAC / distance / power");
+        if (this.lock?.rssi !== undefined) this.log.info(`Found Lock Pro via BLE at RSSI ${this.lock.rssi}`);
 
-        /*
-        For every state in the system there has to be also an object of type state
-        Here a simple template for a boolean variable named "testVariable"
-        Because every adapter instance uses its own unique namespace variable names can't collide with other adapters variables
-        */
-        await this.setObjectNotExistsAsync("testVariable", {
+        // enable encryption if keys provided
+        if (cfg.keyId && cfg.encKey) this.lock.setKey(cfg.keyId, cfg.encKey);
+
+        await this.defineObjects();
+        await this.updateStatus();
+
+        const poll = Number(cfg.poll) || 15;
+        this.pollTimer = setInterval(() => this.updateStatus(), poll * 1000);
+    }
+
+    /** Declare the ioBroker object tree. */
+    private async defineObjects(): Promise<void> {
+        await this.extendObjectAsync("state", { type: "channel" });
+
+        await this.extendObjectAsync("state.locked", {
             type: "state",
-            common: {
-                name: "testVariable",
-                type: "boolean",
-                role: "indicator",
-                read: true,
-                write: true,
-            },
+            common: { name: "locked", type: "boolean", role: "lock", read: true, write: false },
             native: {},
         });
 
-        // In order to get state updates, you need to subscribe to them. The following line adds a subscription for our variable we have created above.
-        this.subscribeStates("testVariable");
-        // You can also add a subscription for multiple states. The following line watches all states starting with "lights."
-        // this.subscribeStates("lights.*");
-        // Or, if you really must, you can also watch all states. Don't do this if you don't need to. Otherwise this will cause a lot of unnecessary load on the system:
-        // this.subscribeStates("*");
+        await this.extendObjectAsync("state.battery", {
+            type: "state",
+            common: { name: "battery", type: "number", role: "value.battery", unit: "%", read: true, write: false },
+            native: {},
+        });
 
-        /*
-            setState examples
-            you will notice that each setState will cause the stateChange event to fire (because of above subscribeStates cmd)
-        */
-        // the variable testVariable is set to true as command (ack=false)
-        await this.setStateAsync("testVariable", true);
+        await this.extendObjectAsync("state.door", {
+            type: "state",
+            common: { name: "doorState", type: "string", role: "sensor.door", read: true, write: false },
+            native: {},
+        });
 
-        // same thing, but the value is flagged "ack"
-        // ack should be always set to true if the value is received from or acknowledged from the target system
-        await this.setStateAsync("testVariable", { val: true, ack: true });
-
-        // same thing, but the state is deleted after 30s (getState will return null afterwards)
-        await this.setStateAsync("testVariable", { val: true, ack: true, expire: 30 });
-
-        // examples for the checkPassword/checkGroup functions
-        const isPasswordCorrect = await this.checkPasswordAsync("admin", "iobroker");
-        this.log.info("check user admin pw iobroker: " + isPasswordCorrect);
-
-        const isInGroup = await this.checkGroupAsync("admin", "admin");
-        this.log.info(`check group result: ${isInGroup}`);
+        // command buttons -----------------------------------------------------
+        const button: any = { type: "state", common: { role: "button", type: "boolean", read: false, write: true }, native: {} };
+        await this.extendObjectAsync("cmd.lock", button);
+        await this.extendObjectAsync("cmd.unlock", button);
+        await this.extendObjectAsync("cmd.unlockNoUnlatch", button);
     }
 
-    /**
-     * Is called when adapter shuts down - callback has to be called under any circumstances!
-     */
-    private onUnload(callback: () => void): void {
+    /** Poll lock / battery / door status. */
+    private async updateStatus(): Promise<void> {
+        if (!this.lock) return;
         try {
-            // Here you must clear all timeouts or intervals that may still be active
-            // clearTimeout(timeout1);
-            // clearTimeout(timeout2);
-            // ...
-            // clearInterval(interval1);
-
-            callback();
+            const s = await this.lock.getLockState();
+            await this.setStateChangedAsync("state.locked", !!s.lockState, true);
+            if (typeof s.battery === "number") await this.setStateChangedAsync("state.battery", s.battery, true);
+            if (s.doorState !== undefined) await this.setStateChangedAsync("state.door", s.doorState, true);
         } catch (e) {
-            this.log.error(`onUnload error: ${e instanceof Error ? e.message : String(e)}`);
-            callback();
+            this.log.error(`Status update failed: ${e}`);
         }
     }
 
-    // If you need to react to object changes, uncomment the following block and the corresponding line in the constructor.
-    // You also need to subscribe to the objects with `this.subscribeObjects`, similar to `this.subscribeStates`.
-    // /**
-    //  * Is called if a subscribed object changes
-    //  */
-    // private onObjectChange(id: string, obj: ioBroker.Object | null | undefined): void {
-    //     if (obj) {
-    //         // The object was changed
-    //         this.log.info(`object ${id} changed: ${JSON.stringify(obj)}`);
-    //     } else {
-    //         // The object was deleted
-    //         this.log.info(`object ${id} deleted`);
-    //     }
-    // }
-
-    /**
-     * Is called if a subscribed state changes
-     */
-    private onStateChange(id: string, state: ioBroker.State | null | undefined): void {
-        if (state) {
-            // The state was changed
-            this.log.info(`state ${id} changed: ${state.val} (ack = ${state.ack})`);
-        } else {
-            // The state was deleted
-            this.log.info(`state ${id} deleted`);
+    /** Handle button presses. */
+    private async onStateChange(id: string, state: ioBroker.State | null): Promise<void> {
+        if (!state || state.ack) return;
+        if (!this.lock) return;
+        try {
+            if (id.endsWith("cmd.lock")) await this.lock.lock();
+            else if (id.endsWith("cmd.unlockNoUnlatch")) await this.lock.unlockNoUnlatch();
+            else if (id.endsWith("cmd.unlock")) await this.lock.unlock();
+        } catch (e) {
+            this.log.warn(String(e));
+        } finally {
+            await this.setStateAsync(id, false, true); // reset push‑button
         }
     }
 
-    // If you need to accept messages in your adapter, uncomment the following block and the corresponding line in the constructor.
-    // /**
-    //  * Some message was sent to this instance over message box. Used by email, pushover, text2speech, ...
-    //  * Using this method requires "common.messagebox" property to be set to true in io-package.json
-    //  */
-    // private onMessage(obj: ioBroker.Message): void {
-    //     if (typeof obj === "object" && obj.message) {
-    //         if (obj.command === "send") {
-    //             // e.g. send email or pushover or whatever
-    //             this.log.info("send command");
-
-    //             // Send response in callback if required
-    //             if (obj.callback) this.sendTo(obj.from, obj.command, "Message received", obj.callback);
-    //         }
-    //     }
-    // }
-
+    /** Adapter unload. */
+    private async onUnload(callback: () => void): Promise<void> {
+        if (this.pollTimer) clearInterval(this.pollTimer);
+        try {
+            await this.sb.stopScan();
+        } catch {
+            /* ignore */
+        }
+        callback();
+    }
 }
 
-if (require.main !== module) {
-    // Export the constructor in compact mode
-    module.exports = (options: Partial<utils.AdapterOptions> | undefined) => new LockproBle(options);
-} else {
-    // otherwise start the instance directly
-    (() => new LockproBle())();
-}
+// Factory export & standalone execution
+export = (o?: Partial<utils.AdapterOptions>) => new LockProBle(o);
+if (require.main === module) new LockProBle();
