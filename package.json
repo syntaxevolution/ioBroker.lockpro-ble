@@ -6,32 +6,12 @@
   "scripts": {
     "lint": "eslint . --ext .js",
     "prepare": "npm run postinstall",
-    "postinstall": "node patch-usocket.js"
+    "postinstall": "npm install usocket@0.8.8 --no-save"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.2.3",
-    "node-switchbot": "^3.5.0"
-  },
-  "devDependencies": {
-    "eslint": "^8.0.0"
-  },
-  "scripts": {
-    "preinstall": "npm install usocket@0.8.8 --no-save",
-    "lint": "eslint . --ext .js"
-  },
-  "devDependencies": {
-    "eslint": "^8.0.0",
-    "npm-force-resolutions": "^0.0.8"
-  },
-  "resolutions": {
+    "node-switchbot": "^3.5.0",
     "usocket": "0.8.8"
-  },
-  "scripts": {
-    "preinstall": "npx npm-force-resolutions",
-    "lint": "eslint . --ext .js"
-  },
-  "devDependencies": {
-    "eslint": "^8.0.0"
   },
   "overrides": {
     "usocket": "0.8.8",
