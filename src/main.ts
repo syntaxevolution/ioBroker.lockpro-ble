@@ -32,6 +32,7 @@ class LockProBle extends utils.Adapter {
         }
 
         this.log.info(`Scanning for Lock Pro (${cfg.lockMac}) …`);
+        this.sb.on('discover', (d: any) => this.log.debug(`BLE found: ${JSON.stringify(d)}`));
         await this.sb.startScan();
         try {
             this.lock = await this.sb.waitFirst(
