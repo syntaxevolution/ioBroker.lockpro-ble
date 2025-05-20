@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "preinstall": "npx npm-force-resolutions"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.2.3",
