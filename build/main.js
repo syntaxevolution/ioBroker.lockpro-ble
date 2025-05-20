@@ -44,19 +44,21 @@ class LockProBle extends utils.Adapter {
       this.log.error("No MAC address configured \u2013 aborting.");
       return;
     }
-    this.log.info(`Scanning for Lock Pro (${cfg.lockMac}) \u2026`);
-    await this.sb.startScan();
+    this.log.info(`Discovering Lock Pro (${cfg.lockMac}) \u2026`);
     try {
-      this.lock = await this.sb.waitFirst(
-        // …predicate…,
-        6e4
-        // bump to 60 s
+      this.lock = await this.sb.discoverOne(
+        {
+          model: "p",
+          addresses: [cfg.lockMac.toLowerCase()]
+        },
+        3e4
+        // timeout in ms
       );
-      this.log.info("Lock discovered!");
-    } catch (err) {
-      this.log.error("waitFirst() timed out or failed: " + err);
-    } finally {
-      await this.sb.stopScan();
+      this.log.info(`Found Lock Pro via BLE at RSSI ${this.lock.rssi}`);
+    } catch {
+      throw new Error(
+        "Lock Pro not found \u2013 check MAC / distance / power"
+      );
     }
     if (!this.lock) throw new Error("Lock Pro not found \u2013 check MAC / distance / power");
     if (((_a = this.lock) == null ? void 0 : _a.rssi) !== void 0) this.log.info(`Found Lock Pro via BLE at RSSI ${this.lock.rssi}`);
