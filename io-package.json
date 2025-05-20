@@ -1,0 +1,116 @@
+{
+    "common": {
+        "name": "lockpro-ble",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "uk": "Початкова версія",
+                "zh-cn": "首次出版"
+            }
+        },
+        "titleLang": {
+            "en": "SwitchBot Lock Pro (BLE)",
+            "de": "SwitchBot Lock Pro (BLE)",
+            "ru": "SwitchBot Lock Pro (BLE)",
+            "pt": "SwitchBot Lock Pro (BLE)",
+            "nl": "SwitchBot Lock Pro (BLE)",
+            "fr": "SwitchBot Lock Pro (BLE)",
+            "it": "SwitchBot Lock Pro (BLE)",
+            "es": "SwitchBot Lock Pro (BLE)",
+            "pl": "SwitchBot Lock Pro (BLE)",
+            "uk": "SwitchBot Lock Pro (BLE)",
+            "zh-cn": "SwitchBot Lock Pro (BLE)"
+        },
+        "desc": {
+            "en": "lockpro-ble",
+            "de": "lockpro-ble",
+            "ru": "lockpro-ble",
+            "pt": "lockpro-ble",
+            "nl": "lockpro-ble",
+            "fr": "lockpro-ble",
+            "it": "lockpro-ble",
+            "es": "lockpro-ble",
+            "pl": "lockpro-ble",
+            "uk": "lockpro-ble",
+            "zh-cn": "lockpro-ble"
+        },
+        "authors": [
+            "syntaxevolution <topher@syntaxevolution.com>"
+        ],
+        "keywords": [
+            "ioBroker",
+            "template",
+            "Smart Home",
+            "home automation"
+        ],
+        "licenseInformation": {
+            "type": "free",
+            "license": "MIT"
+        },
+        "platform": "Javascript/Node.js",
+        "icon": "lockpro-ble.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/syntaxevolution/ioBroker.lockpro-ble/main/admin/lockpro-ble.png",
+        "readme": "https://github.com/syntaxevolution/ioBroker.lockpro-ble/blob/main/README.md",
+        "loglevel": "info",
+        "tier": 3,
+        "mode": "daemon",
+        "type": "alarm",
+        "compact": true,
+        "connectionType": "local",
+        "dataSource": "poll",
+        "adminUI": {
+            "config": "json"
+        },
+        "dependencies": [
+            {
+                "js-controller": ">=6.0.11"
+            }
+        ],
+        "globalDependencies": [
+            {
+                "admin": "7.0.23"
+            }
+        ]
+    },
+    "native": {
+        "bleHci": "",
+        "lockMac": "",
+        "keyId": "",
+        "encKey": "",
+        "poll": "15"
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "Device or service connected",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
+}

@@ -1,0 +1,69 @@
+{
+    "expert": "yes",
+    "cli": false,
+    "adapterName": "lockpro-ble",
+    "title": "SwitchBot Lock Pro (BLE)",
+    "keywords": "",
+    "contributors": [
+        "Topher Lazarz"
+    ],
+    "features": [
+        "adapter"
+    ],
+    "adminFeatures": [],
+    "type": "alarm",
+    "startMode": "daemon",
+    "connectionType": "local",
+    "dataSource": "poll",
+    "connectionIndicator": "yes",
+    "adapterSettings": [
+        {
+            "key": "bleHci",
+            "label": "HCI Address of Bluetooth Adapter",
+            "inputType": "text",
+            "defaultValue": ""
+        },
+        {
+            "key": "lockMac",
+            "label": "Lock Pro MAC Address",
+            "inputType": "text",
+            "defaultValue": ""
+        },
+        {
+            "key": "keyId",
+            "label": "Encryption Key ID",
+            "inputType": "text",
+            "defaultValue": ""
+        },
+        {
+            "key": "encKey",
+            "label": "Encryption Key",
+            "inputType": "text",
+            "defaultValue": ""
+        },
+        {
+            "key": "poll",
+            "label": "Polling Interval",
+            "inputType": "number",
+            "defaultValue": "15"
+        }
+    ],
+    "language": "TypeScript",
+    "nodeVersion": "20",
+    "adminUi": "json",
+    "releaseScript": "yes",
+    "indentation": "Space (4)",
+    "quotes": "double",
+    "tools": [
+        "ESLint",
+        "type checking"
+    ],
+    "authorName": "syntaxevolution",
+    "authorGithub": "syntaxevolution",
+    "authorEmail": "topher@syntaxevolution.com",
+    "gitRemoteProtocol": "HTTPS",
+    "license": "MIT License",
+    "dependabot": "yes",
+    "target": "github",
+    "creatorVersion": "2.6.5"
+}

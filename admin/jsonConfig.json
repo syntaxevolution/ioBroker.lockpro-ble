@@ -1,0 +1,31 @@
+{
+    "i18n": true,
+    "type": "panel",
+    "items": {
+        "bleHci": {
+            "type": "text",
+            "label": "HCI Address of Bluetooth Adapter",
+            "newLine": true
+        },
+        "lockMac": {
+            "type": "text",
+            "label": "Lock Pro MAC Address",
+            "newLine": true
+        },
+        "keyId": {
+            "type": "text",
+            "label": "Encryption Key ID",
+            "newLine": true
+        },
+        "encKey": {
+            "type": "text",
+            "label": "Encryption Key",
+            "newLine": true
+        },
+        "poll": {
+            "type": "number",
+            "label": "Polling Interval",
+            "newLine": true
+        }
+    }
+}

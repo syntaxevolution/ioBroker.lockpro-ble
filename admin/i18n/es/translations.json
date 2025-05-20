@@ -1,0 +1,8 @@
+{
+    "lockpro-ble adapter settings": "Ajustes del adaptador para lockpro-ble",
+    "bleHci": "HCI Address of Bluetooth Adapter",
+    "lockMac": "Lock Pro MAC Address",
+    "keyId": "Encryption Key ID",
+    "encKey": "Encryption Key",
+    "poll": "Polling Interval"
+}
