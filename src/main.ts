@@ -99,6 +99,7 @@ class LockproBle extends utils.Adapter {
 
             callback();
         } catch (e) {
+            this.log.error(`onUnload error: ${e instanceof Error ? e.message : String(e)}`);
             callback();
         }
     }
