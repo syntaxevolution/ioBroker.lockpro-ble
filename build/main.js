@@ -45,13 +45,16 @@ class LockProBle extends utils.Adapter {
       return;
     }
     this.log.info(`Scanning for Lock Pro (${cfg.lockMac}) \u2026`);
-    this.sb.on("discover", (d) => this.log.debug(`BLE found: ${JSON.stringify(d)}`));
     await this.sb.startScan();
     try {
       this.lock = await this.sb.waitFirst(
-        (d) => d.model === "p" && d.address.toLowerCase() === cfg.lockMac.toLowerCase(),
-        3e4
+        // …predicate…,
+        6e4
+        // bump to 60 s
       );
+      this.log.info("Lock discovered!");
+    } catch (err) {
+      this.log.error("waitFirst() timed out or failed: " + err);
     } finally {
       await this.sb.stopScan();
     }
