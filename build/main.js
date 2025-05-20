@@ -34,9 +34,9 @@ class LockProBle extends utils.Adapter {
     this.on("ready", this.onReady.bind(this));
     this.on("stateChange", this.onStateChange.bind(this));
     this.on("unload", this.onUnload.bind(this));
-    this.sb = Switchbot(this.config.bleHci || void 0);
+    this.sb = new Switchbot(this.config.bleHci);
   }
-  /** Called once all adapter settings are present. */
+  /** Lifecycle – called once all configuration is loaded. */
   async onReady() {
     var _a;
     const cfg = this.config;
@@ -44,7 +44,7 @@ class LockProBle extends utils.Adapter {
       this.log.error("No MAC address configured \u2013 aborting.");
       return;
     }
-    this.log.info(`Scanning for Lock\xA0Pro (${cfg.lockMac}) \u2026`);
+    this.log.info(`Scanning for Lock Pro (${cfg.lockMac}) \u2026`);
     await this.sb.startScan();
     try {
       this.lock = await this.sb.waitFirst(
@@ -54,15 +54,17 @@ class LockProBle extends utils.Adapter {
     } finally {
       await this.sb.stopScan();
     }
-    if (!this.lock) throw new Error("Lock\xA0Pro not found \u2013 check MAC / distance / power");
-    if (((_a = this.lock) == null ? void 0 : _a.rssi) !== void 0) this.log.info(`Found Lock\xA0Pro via BLE at RSSI ${this.lock.rssi}`);
-    if (cfg.keyId && cfg.encKey) this.lock.setKey(cfg.keyId, cfg.encKey);
+    if (!this.lock) throw new Error("Lock Pro not found \u2013 check MAC / distance / power");
+    if (((_a = this.lock) == null ? void 0 : _a.rssi) !== void 0) this.log.info(`Found Lock Pro via BLE at RSSI ${this.lock.rssi}`);
+    if (cfg.keyId && cfg.encKey) {
+      this.lock.setKey(cfg.keyId, cfg.encKey);
+    }
     await this.defineObjects();
     await this.updateStatus();
     const poll = Number(cfg.poll) || 15;
     this.pollTimer = setInterval(() => this.updateStatus(), poll * 1e3);
   }
-  /** Declare the ioBroker object tree. */
+  /** Define ioBroker object tree. */
   async defineObjects() {
     await this.extendObjectAsync("state", { type: "channel" });
     await this.extendObjectAsync("state.locked", {
@@ -91,16 +93,19 @@ class LockProBle extends utils.Adapter {
     try {
       const s = await this.lock.getLockState();
       await this.setStateChangedAsync("state.locked", !!s.lockState, true);
-      if (typeof s.battery === "number") await this.setStateChangedAsync("state.battery", s.battery, true);
-      if (s.doorState !== void 0) await this.setStateChangedAsync("state.door", s.doorState, true);
+      if (typeof s.battery === "number") {
+        await this.setStateChangedAsync("state.battery", s.battery, true);
+      }
+      if (s.doorState !== void 0) {
+        await this.setStateChangedAsync("state.door", s.doorState, true);
+      }
     } catch (e) {
       this.log.error(`Status update failed: ${e}`);
     }
   }
   /** Handle button presses. */
   async onStateChange(id, state) {
-    if (!state || state.ack) return;
-    if (!this.lock) return;
+    if (!state || state.ack || !this.lock) return;
     try {
       if (id.endsWith("cmd.lock")) await this.lock.lock();
       else if (id.endsWith("cmd.unlockNoUnlatch")) await this.lock.unlockNoUnlatch();
