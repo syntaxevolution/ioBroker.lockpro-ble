@@ -6,15 +6,16 @@
   "scripts": {
     "lint": "eslint . --ext .js",
     "prepare": "npm run postinstall",
-    "postinstall": "npm install usocket@1.0.1 --no-save"
+    "postinstall": "npm install usocket@1.0.1 node-gyp@11.2.0 --no-save"
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.2.3",
     "node-switchbot": "^3.5.0",
-    "usocket": "1.0.1"
+    "usocket": "1.0.1",
+    "node-gyp": "^11.2.0"
   },
   "overrides": {
     "usocket": "1.0.1",
-    "node-gyp": "^10.3.1"
+    "node-gyp": "^11.2.0"
   }
 }
