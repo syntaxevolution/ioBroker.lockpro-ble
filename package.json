@@ -9,7 +9,7 @@
     "postinstall": "npm install usocket@1.0.1 node-gyp@11.2.0 --no-save"
   },
   "dependencies": {
-    "@iobroker/adapter-core": "^3.2.3",
+    "@iobroker/adapter-core": "^3.3.2",
     "node-switchbot": "^3.5.0",
     "usocket": "1.0.1",
     "node-gyp": "^11.2.0"
