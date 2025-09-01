@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@iobroker/adapter-core": "^3.2.3",
-    "node-switchbot": "^3.5.0",
+    "node-switchbot": "^3.6.0",
     "usocket": "1.0.1",
     "node-gyp": "^11.2.0"
   },
